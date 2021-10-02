@@ -40,7 +40,7 @@ if __name__ == '__main__':
     dataset_21 = extractData("2021/nba_2021_per_game.csv")
 
     # get years 2016 up till 2019
-    dataset_multiyear = extractDataMinYear("uptill2019/Seasons_stats_complete.csv", 2016)
+    dataset_multiyear = extractDataMinYear("uptill2019/Seasons_stats_complete.csv", 2012)
 
 
     datasets = {2021: dataset_21, 2020: dataset_20}
@@ -48,8 +48,7 @@ if __name__ == '__main__':
     for year in range(2012, 2020):
         datasets[year] = dataset_multiyear[dataset_multiyear['Year'] == year]
 
-    # need to make sure all datasets have the same columns
-    # dataset_20 and dataset_21 have the same columns, can use either as ref
+    # use dataset_20.columns, doesn't have non applicable Rank data
     columns = list(dataset_20.columns)
 
     # trim games started, not tracking that
@@ -65,16 +64,45 @@ if __name__ == '__main__':
     datasets[2020] = dataset_20
     datasets[2021] = dataset_21
 
-    # going to predict nba sophomore stats
+    # now put all data into one table
 
-    # strat, going to compile all data
-    # need list of rookies, can get from basketball reference
-    # going to use pick number and stats
+    for year in range(2012, 2022):
+        df = datasets[year]
+        df.loc[:, "Year"] = np.array([year] * len(df))
+        datasets[year] = df
 
     rookies = {}
 
     for year in range(2011, 2021):
         rookies[year] = extractData("rookies/" + str(year) + ".csv")
 
+    # mapping for each nba player to their rookie and sophomore years
+    # years have to be 2012 and later for both, minimum 40 games played for
+    # each
+
+    # rookie_pairs = {}
+    #
+    # for year in range(2020, 2021):
+    #
+    #     for rookie in rookies[year].loc[:, "Player"]:
+    #
+    #         valid_years = []
+    #
+    #         for pot_year in range(year, 2022):
+    #             try:
+    #                 rookie_stats = \
+    #                 datasets[pot_year][datasets[pot_year]["Player"] == rookie]
+    #
+    #                 if rookie_stats.size > len(columns) + 1:
+    #                     rookie_stats = rookie_stats[rookie_stats["Tm"] == "TOT"]
+    #
+    #                 elif rookie_stats.size == 0 or \
+    #                 rookie_stats[rookie_stats['G'] >= 25].size == 0:
+    #                     continue
+    #
+    #                 valid_years.append(pot_year)
+    #
+    #             except KeyError:
+    #                 pass
 
 
