@@ -7,6 +7,7 @@ import itertools
 import torch
 
 import os
+import csv
 
 # Make numpy printouts easier to read.
 np.set_printoptions(precision=3, suppress=True)
@@ -30,51 +31,57 @@ def extractDataMinYear(rel_path, min_year, column_names=None):
     abs_file_path = os.path.join(script_dir, rel_path)
 
     mega_dataset = extractData(rel_path)
-    trimmed_dataset = mega_dataset[mega_dataset['Year'] >= min_year]
-
-    return trimmed_dataset
+    return mega_dataset[mega_dataset['Year'] >= min_year]
 
 if __name__ == '__main__':
 
-    dataset_20 = extractData("2020/nba_2020_per_game.csv")
-    dataset_21 = extractData("2021/nba_2021_per_game.csv")
+    df_20 = extractData("2020/nba_2020_per_game.csv")
+    df_21 = extractData("2021/nba_2021_per_game.csv")
+
+    df_20.loc[:, "Year"] = np.array([2020] * len(df_20))
+    df_21.loc[:, "Year"] = np.array([2021] * len(df_21))
 
     # get years 2016 up till 2019
-    dataset_multiyear = extractDataMinYear("uptill2019/Seasons_stats_complete.csv", 2012)
+    df_m = extractDataMinYear("uptill2019/Seasons_stats_complete.csv", 2012)
 
-
-    datasets = {2021: dataset_21, 2020: dataset_20}
-
-    for year in range(2012, 2020):
-        datasets[year] = dataset_multiyear[dataset_multiyear['Year'] == year]
-
-    # use dataset_20.columns, doesn't have non applicable Rank data
-    columns = list(dataset_20.columns)
+    # want all columns to match
+    columns = list(df_20.columns)
 
     # trim games started, not tracking that
     columns.remove('GS')
 
-    for year, dataset in datasets.items():
-        datasets[year] = dataset.loc[:, columns]
+    df_m = df_m.loc[:, columns]
 
     # trim GS from these two datasets
-    dataset_21 = dataset_21.loc[:, columns]
-    dataset_20 = dataset_20.loc[:, columns]
+    df_21 = df_21.loc[:, columns]
+    df_20 = df_20.loc[:, columns]
 
-    datasets[2020] = dataset_20
-    datasets[2021] = dataset_21
+    df_m = pd.concat([df_m, df_20, df_21])
 
-    # now put all data into one table
-
-    for year in range(2012, 2022):
-        df = datasets[year]
-        df.loc[:, "Year"] = np.array([year] * len(df))
-        datasets[year] = df
-
-    rookies = {}
+    rookie_list = []
 
     for year in range(2011, 2021):
-        rookies[year] = extractData("rookies/" + str(year) + ".csv")
+        with open("rookies/" + str(year) + ".csv", newline ='', \
+        encoding="utf8") as f:
+            reader = csv.reader(f)
+            rookie_list.extend(list(reader))
+
+    rookie_columns = rookie_list[0]
+    # now transform this into df then call it a day
+
+    rookie_df = pd.DataFrame(data=rookie_list, columns=rookie_columns)
+    rookie_df = rookie_df[rookie_df["Pk"] != "Pk"]
+
+    rookie_years = np.array([[year] * 60 for year in range(2012, 2022)])
+    rookie_years = rookie_years.flatten()
+
+    rookie_df.loc[:, "Year"] = np.array(rookie_years)
+    # do by year first 60 2012, next 60 2013, etc.
+
+    # temp_rookie_df = extractData("rookies/" + str(year) + ".csv")
+    # temp_rookie_df.loc[:, "Year"] =  np.array([year + 1] * \
+    # len(temp_rookie_df))
+    # rookie_df = rookie_df.append(temp_rookie_df)
 
     # mapping for each nba player to their rookie and sophomore years
     # years have to be 2012 and later for both, minimum 40 games played for
