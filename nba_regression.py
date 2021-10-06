@@ -52,11 +52,21 @@ if __name__ == '__main__':
 
     df_m = df_m.loc[:, columns]
 
+    totals_columns = ["MP", "FG", "FGA", "3P", "3PA", "2P", "2PA", "FT", \
+    "FTA", "ORB", "DRB", "TRB", "AST", "STL", "BLK", "TOV", "PF", "PTS"]
+
+    df_m.loc[:,totals_columns] = df_m.loc[:,totals_columns].divide(df_m['G'], axis=0).round(1)
+
     # trim GS from these two datasets
     df_21 = df_21.loc[:, columns]
     df_20 = df_20.loc[:, columns]
 
     df_m = pd.concat([df_m, df_20, df_21])
+
+
+    # need to group data, so each player has one line per year
+    # check how many entries per player per year
+    # if 1 good! or or if more take the "TOT" one
 
     rookie_list = []
 
@@ -76,6 +86,8 @@ if __name__ == '__main__':
     rookie_years = rookie_years.flatten()
 
     rookie_df.loc[:, "Year"] = np.array(rookie_years)
+
+    # need to do TOT scraping too
     # do by year first 60 2012, next 60 2013, etc.
 
     # temp_rookie_df = extractData("rookies/" + str(year) + ".csv")
