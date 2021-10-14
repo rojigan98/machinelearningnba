@@ -63,10 +63,14 @@ if __name__ == '__main__':
 
     df_m = pd.concat([df_m, df_20, df_21])
 
+    df_m = df_m.drop_duplicates(subset=['Year', 'Player'], keep='first')
 
-    # need to group data, so each player has one line per year
+    # need to select data, so each player has one line per year
     # check how many entries per player per year
     # if 1 good! or or if more take the "TOT" one
+
+
+    # need to have "TOT" take precedence if it exists
 
     rookie_list = []
 
